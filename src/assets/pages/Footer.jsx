@@ -20,7 +20,7 @@ export default function Footer() {
 
   return (
     <>
-      {userUid && <h1>{userUid}</h1>}
+      {userUid}
     </>
   );
 }
