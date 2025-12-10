@@ -1,92 +1,117 @@
 import { useEffect, useState } from 'react'
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  signOut
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut
 } from "firebase/auth";
 import { auth } from '../../firebase';
 import '../css/Navbar.css'
 
-export default function Navbar() {
+import {
+    Container, Nav, Navbar,
+    Button, Modal,Form
+} from 'react-bootstrap'
+
+
+export default function Navigationbar() {
     const [user, setUser] = useState(null);
-    const [showModal, setShowModal] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isSignUp, setIsSignUp] = useState(false);
+    const [show, setShow] = useState(false);
+    const [displayName, setDisplayName] = useState('');
+
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(user => {
             setUser(user);
             if (user) {
-                setShowModal(false);
+                setShow(false);
+                setDisplayName(user.email);
+                console.log(user)
+            } else {
+                setDisplayName('');
             }
         });
         return () => unsubscribe();
     }, []);
 
-    const handleAuthAction = () => {
-        if (isSignUp) {
-            createUserWithEmailAndPassword(auth, email, password)
-                .catch(error => alert(error.message));
-        } else {
-            signInWithEmailAndPassword(auth, email, password)
-                .catch(error => alert(error.message));
-        }
+    const handleSingIn = () => {
+
+        signInWithEmailAndPassword(auth, email, password)
+            .catch(error => alert(error.message));
+
+    };
+
+    const handleSingUp = () => {
+        createUserWithEmailAndPassword(auth, email, password)
+            .catch(error => alert(error.message));
+
     };
 
     const handleSignOut = () => {
         signOut(auth).catch(error => console.error(error));
     };
 
-    const openModal = (signUp = false) => {
-        setIsSignUp(signUp);
-        setShowModal(true);
-        setEmail('');
-        setPassword('');
-    }
 
     return (
-        <nav className="navbar">
-          <div className='navbar-container'>
-            <a className="navbar-brand" href="/">Hommily</a>
-            <div className="navbar-actions">
-                {user ? (
-                    <>
-                        <span>{user.email}</span>
-                        <button onClick={handleSignOut}>Sign Out</button>
-                    </>
-                ) : (
-                    <button onClick={() => openModal(false)}>Login / Sign Up</button>
-                )}
-            </div>
-            {showModal && (
-                <div className="modal-backdrop" onClick={() => setShowModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <button className="close-modal-button" onClick={() => setShowModal(false)}>&times;</button>
-                        <h2>{isSignUp ? 'Create Account' : 'Sign In'}</h2>
-                        <input 
-                            type="email" 
-                            placeholder="Email" 
-                            value={email} 
-                            onChange={e => setEmail(e.target.value)} 
-                        />
-                        <input 
-                            type="password" 
-                            placeholder="Password" 
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
-                        />
-                        <button className="auth-button" onClick={handleAuthAction}>{isSignUp ? 'Sign Up' : 'Sign In'}</button>
-                        <p>
-                            {isSignUp ? "Already have an account? " : "Don't have an account? "}
-                            <a href="#" onClick={(e) => { e.preventDefault(); setIsSignUp(!isSignUp); }}>
-                                {isSignUp ? "Sign In" : "Sign Up"}
-                            </a>
-                        </p>
-                    </div>
-                </div>
-            )}
-            </div>
-        </nav>
+        <>
+            <Navbar expand="md" bg="dark" data-bs-theme="dark">
+                <Container>
+                    <Navbar.Brand href="#home">Hi, {displayName}</Navbar.Brand>
+                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                    <Navbar.Collapse id="basic-navbar-nav">
+                        <Nav className="me-auto">
+                            <Nav.Link href="#home">Home</Nav.Link>
+                            <Nav.Link href="#link">Link</Nav.Link>
+                        </Nav>
+                        {
+                            user ? <Button onClick={handleSignOut} variant="outline-danger">Log Out</Button>
+                                : <Button onClick={handleShow} variant="outline-success">Login/Sing-Up</Button>
+
+                        }
+                    </Navbar.Collapse>
+                </Container>
+            </Navbar>
+
+            <Modal show={show} onHide={handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Modal heading</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+                            <Form.Label>Email address</Form.Label>
+                            <Form.Control
+                                type="email"
+                                placeholder="name@example.com"
+                                autoFocus
+                                onChange={e => setEmail(e.target.value)}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3" controlId="exampleForm.ControlInput2">
+                            <Form.Label>Password</Form.Label>
+                            <Form.Control
+                                type="password"
+                                placeholder="Enter Your Password"
+                                onChange={e => setPassword(e.target.value)}
+                            />
+                        </Form.Group>
+
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleSingIn}>
+                        Sign In
+                    </Button>
+                    <Button variant="primary" onClick={handleSingUp}>
+                        Sign Up
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </>
     )
 }
