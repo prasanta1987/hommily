@@ -9,7 +9,7 @@ import '../css/Navbar.css'
 
 import {
     Container, Nav, Navbar,
-    Button, Modal,Form
+    Button, Modal, Form
 } from 'react-bootstrap'
 
 
@@ -19,6 +19,8 @@ export default function Navigationbar() {
     const [password, setPassword] = useState('');
     const [show, setShow] = useState(false);
     const [displayName, setDisplayName] = useState('');
+    const [errorMsg, setErrorMsg] = useState(null);
+
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
@@ -41,13 +43,19 @@ export default function Navigationbar() {
     const handleSingIn = () => {
 
         signInWithEmailAndPassword(auth, email, password)
+            .then(() => {
+                setErrorMsg("Sign in Successful");
+            })
             .catch(error => alert(error.message));
 
     };
 
     const handleSingUp = () => {
         createUserWithEmailAndPassword(auth, email, password)
-            .catch(error => alert(error.message));
+            .catch(error => {
+                setErrorMsg((error.message).includes("Firebase: Error (auth/email-already-in-use).") ? "User Already Exist" : "Unknown");
+                console.log(error.message);
+            });
 
     };
 
@@ -58,7 +66,7 @@ export default function Navigationbar() {
 
     return (
         <>
-            <Navbar expand="md" bg="dark" data-bs-theme="dark">
+            <Navbar expand="md" bg="light" data-bs-theme="light">
                 <Container>
                     <Navbar.Brand href="#home">Hi, {displayName}</Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -100,7 +108,7 @@ export default function Navigationbar() {
                                 onChange={e => setPassword(e.target.value)}
                             />
                         </Form.Group>
-
+                        <i>{errorMsg}</i>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
