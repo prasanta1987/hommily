@@ -4,7 +4,7 @@ import { auth, db } from '../../firebase';
 import { ref, onValue, get, set } from 'firebase/database';
 import { Container, Dropdown, DropdownButton, Badge } from 'react-bootstrap'
 
-import Boards from './Boards'
+import Boards from '../components/Boards'
 
 
 export default function LandingPage() {

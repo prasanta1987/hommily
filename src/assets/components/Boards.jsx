@@ -3,7 +3,7 @@ import { Card, Button, Dropdown, DropdownButton, Badge } from 'react-bootstrap'
 
 export default function Boards(props) {
 
-    // console.log(props.boardData);
+    console.log(props.boardData);
 
     const onBoardSelect = (devCode, devFeed) => {
         props.sendSelectedBoard(devCode, devFeed);
@@ -18,11 +18,9 @@ export default function Boards(props) {
                     {(props.boardData.devFeeds) &&
                         Object.keys(props.boardData.devFeeds).map(devFeed => {
                             return (
-                                <Dropdown.Item className="d-flex justify-content-between"
-                                    key={devFeed} 
-                                    onClick={() =>onBoardSelect(props.boardData.deviceCode,devFeed)}>
+                                <Dropdown.Item className="d-flex justify-content-between" key={devFeed} onClick={() => onBoardSelect(props.boardData.deviceCode, devFeed)}>
                                     <span>{devFeed}</span>
-                                    <Badge>{props.boardData.devFeeds[devFeed]}</Badge>
+                                    <Badge>{props.boardData.devFeeds[devFeed].value}</Badge>
                                 </Dropdown.Item>
                             )
                         })
@@ -43,3 +41,11 @@ export default function Boards(props) {
     <Button onClick={()=>onBoardSelect(props.boardData.deviceCode)} variant="primary">Select</Button>
 </Card.Body>
 </Card> */}
+
+
+
+
+{/* <Dropdown.Item className="d-flex justify-content-between" key={devFeed} onClick={() => onBoardSelect(props.boardData.deviceCode, devFeed)}>
+<p>{devFeed}</p>
+<Badge>{props.boardData.devFeeds[devFeed]}</Badge>
+</Dropdown.Item> */}
