@@ -66,7 +66,7 @@ export default function LandingPage() {
     }
 
     return (
-        <Container fluid className='bg-light text-light flex-grow-1'>
+        <Container fluid className='bg-dark text-light flex-grow-1 overflow-auto pb-5'>
             <Container className='d-flex justify-content-start gap-3'>
                 {
                     (dbData)
