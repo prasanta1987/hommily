@@ -3,14 +3,31 @@ import { Card, Button, Dropdown, DropdownButton, Badge } from 'react-bootstrap'
 
 export default function Feeds(props) {
 
-    console.log(props.boardData);
+    const feedData = props.feedsData;
 
-    const onBoardSelect = (devCode, devFeed) => {
-        props.sendSelectedBoard(devCode, devFeed);
-    };
+    // const onBoardSelect = (devCode, devFeed) => {
+    //     props.sendSelectedBoard(devCode, devFeed);
+    // };
 
     return (
-        <></>
+        <>
+            {
+                Object.keys(feedData).map(feed => {
+                    if (feedData[feed].isSelected) {
+                        return (
+                            <Card>
+                                <Card.Body>
+                                    <Card.Title>{feed}</Card.Title>
+                                    <Card.Text>
+                                        {feedData[feed].value}
+                                    </Card.Text>
+                                </Card.Body>
+                            </Card >
+                        )
+                    }
+                })
+            }
+        </>
     );
 }
 
@@ -25,10 +42,3 @@ export default function Feeds(props) {
 </Card.Body>
 </Card> */}
 
-
-
-
-{/* <Dropdown.Item className="d-flex justify-content-between" key={devFeed} onClick={() => onBoardSelect(props.boardData.deviceCode, devFeed)}>
-<p>{devFeed}</p>
-<Badge>{props.boardData.devFeeds[devFeed]}</Badge>
-</Dropdown.Item> */}

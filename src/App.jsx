@@ -8,11 +8,11 @@ function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <>
+    <div className='d-flex flex-column vh-100'>
       <Navbar />
       <LandingPage />
       <Footer />
-    </>
+    </div>
   )
 }
 

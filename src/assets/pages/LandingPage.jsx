@@ -1,32 +1,24 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../firebase';
-import { ref, onValue, get, set } from 'firebase/database';
+import { ref, onValue, get, set, update } from 'firebase/database';
 import { Container, Dropdown, DropdownButton, Badge } from 'react-bootstrap'
 
 import Boards from '../components/Boards'
+import Feeds from '../components/Feeds'
 
 
 export default function LandingPage() {
     const [userUid, setUserUid] = useState(null);
     const [dbData, setDBData] = useState(null);
 
-
     const boardSelection = (devCode, devFeed) => {
         console.log("Board Selected: ", devCode);
         console.log("Feed Selected: ", devFeed);
 
-        if (dbData[devCode].selectedFeeds) {
-            dbData[devCode].selectedFeeds += "," + devFeed;
-        } else {
-            dbData[devCode].selectedFeeds = devFeed;
-        }
+        const feedStatus = dbData[devCode].devFeeds[devFeed].isSelected;
 
-        let uniFeeds = (dbData[devCode].selectedFeeds.split(","))
-        uniFeeds = [...new Set(uniFeeds)]
-        uniFeeds = uniFeeds.toString()
-
-        updateDatabase(`${devCode}/selectedFeeds`, uniFeeds);
+        updateDatabase(`${devCode}/devFeeds/${devFeed}`, { "isSelected": !feedStatus });
     }
 
     useEffect(() => {
@@ -67,27 +59,32 @@ export default function LandingPage() {
 
         const dbRef = ref(db, `${userUid}/${reference}`);
 
-        set(dbRef, feed)
+        update(dbRef, feed)
             .then(() => console.log('Data Written Sucssfully'))
             .catch(err => console.log(err))
 
     }
 
     return (
-        <Container fluid className='bg-dark text-light'>
+        <Container fluid className='bg-light text-light flex-grow-1'>
             <Container className='d-flex justify-content-start gap-3'>
                 {
                     (dbData)
                         ? Object.keys(dbData).map(data => {
                             return (
-                                <Boards key={data} sendSelectedBoard={boardSelection} boardData={dbData[data]}></Boards>
+                                <Boards key={data} sendSelectedBoard={boardSelection} boardData={dbData[data]} />
                             )
                         })
                         : "No Data"
                 }
             </Container>
-            <Container>
-                {console.log(dbData)}
+            <Container className='d-flex justify-content-start gap-3'>
+                {
+                    (dbData)
+                    && Object.keys(dbData).map(data => {
+                        return <Feeds key={data} feedsData={dbData[data].devFeeds} />
+                    })
+                }
             </Container>
         </Container>
 
