@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiZap, FiCpu, FiClock } from 'react-icons/fi';
 import '../css/Feeds.css';
 
@@ -61,7 +61,7 @@ const FeedCard = ({ feed, boardName, feedName }) => {
     );
 };
 
-export default function Feeds(props) {
+const Feeds = React.memo((props) => {
     const [selectedFeeds, setSelectedFeeds] = useState([]);
 
     useEffect(() => {
@@ -102,4 +102,7 @@ export default function Feeds(props) {
             ))}
         </div>
     );
-}
+});
+Feeds.displayName = "Feeds";
+
+export default Feeds;
