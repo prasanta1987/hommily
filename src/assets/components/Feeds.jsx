@@ -4,11 +4,25 @@ import '../css/Feeds.css';
 
 // Helper function to format timestamp
 const formatTimestamp = (dateValue) => {
-    const date = new Date(dateValue);
+
+    console.log(dateValue)
+    let dateInput = dateValue;
+    // If the timestamp is a string and doesn't already specify a timezone, treat it as UTC.
+    if (typeof dateInput === 'string' && !dateInput.endsWith('Z')) {
+        // Replace space with 'T' for broader compatibility and append 'Z' for UTC.
+        dateInput = dateInput.replace(' ', 'T') + 'Z';
+    }
+
+    const date = new Date(dateInput);
+
     if (isNaN(date.getTime())) {
         return 'Invalid time';
     }
+
     return new Intl.DateTimeFormat('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
         hour: 'numeric',
         minute: 'numeric',
         second: 'numeric',
