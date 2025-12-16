@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { ref, onValue, get, set, update } from 'firebase/database';
-import { Container, Dropdown, DropdownButton, Badge } from 'react-bootstrap'
+import { Container } from 'react-bootstrap';
 
-import Boards from '../components/Boards'
-import Feeds from '../components/Feeds'
+import Boards from '../components/Boards';
+import Feeds from '../components/Feeds';
 
 
 export default function LandingPage() {
@@ -13,11 +13,7 @@ export default function LandingPage() {
     const [dbData, setDBData] = useState(null);
 
     const boardSelection = (devCode, devFeed) => {
-        console.log("Board Selected: ", devCode);
-        console.log("Feed Selected: ", devFeed);
-
         const feedStatus = dbData[devCode].devFeeds[devFeed].isSelected;
-
         updateDatabase(`${devCode}/devFeeds/${devFeed}`, { "isSelected": !feedStatus });
     }
 
@@ -32,42 +28,32 @@ export default function LandingPage() {
             }
         });
 
-        // Cleanup subscription on unmount
-        // return () => unsubscribe();
+        return () => unsubscribe();
     }, []);
 
     const getDatFromDB = (uid) => {
-        console.log(uid)
-
         const dbRef = ref(db, uid);
         const unSubs = onValue(dbRef, (snapshot) => {
             if (snapshot.exists()) {
                 setDBData(snapshot.val());
-                // console.log(snapshot.val())
-                // snapshot.forEach((childSnapshot) => {
-                //     console.log(childSnapshot.val());
-                // })
+            } else {
+                setDBData(null);
             }
-
         });
 
         return () => unSubs();
-
     }
 
     const updateDatabase = (reference, feed) => {
-
         const dbRef = ref(db, `${userUid}/${reference}`);
-
         update(dbRef, feed)
-            .then(() => console.log('Data Written Sucssfully'))
-            .catch(err => console.log(err))
-
+            .then(() => console.log('Data Written Successfully'))
+            .catch(err => console.log(err));
     }
 
     return (
         <Container fluid className='bg-dark text-light flex-grow-1 overflow-auto pb-5'>
-            <Container className='d-flex justify-content-start gap-3'>
+            <Container className='d-flex justify-content-start gap-3 pt-2'>
                 {
                     (dbData)
                         ? Object.keys(dbData).map(data => {
@@ -78,33 +64,10 @@ export default function LandingPage() {
                         : "No Data"
                 }
             </Container>
-            <Container className='d-flex justify-content-start gap-3'>
-                {
-                    (dbData)
-                    && Object.keys(dbData).map(data => {
-                        return <Feeds key={data} feedsData={dbData[data].devFeeds} />
-                    })
-                }
+            <Container className='d-flex justify-content-start gap-3 pt-2'>
+                {dbData && <Feeds feedData={dbData} />}
             </Container>
         </Container>
 
     );
 }
-
-// return <Boards key={data} sendSelectedBoard={boardSelection} boardData={dbData[data]}></Boards>
-
-{/* <DropdownButton id="dropdown-item-button" title={dbData[data].name}>
-<Dropdown.ItemText><b>{dbData[data].name}:</b> Feeds</Dropdown.ItemText>
-{(dbData[data].devFeeds) &&
-    Object.keys(dbData[data].devFeeds).map(devFeed => {
-        return (
-            <Dropdown.Item className="d-flex justify-content-between"
-                key={devFeed}
-                onClick={() => boardSelection(dbData[data].deviceCode, devFeed)}>
-                <span>{devFeed}</span>
-                <Badge>{dbData[data].devFeeds[devFeed]}</Badge>
-            </Dropdown.Item>
-        )
-    })
-}
-</DropdownButton> */}

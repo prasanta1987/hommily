@@ -1,44 +1,91 @@
 import { useEffect, useState } from 'react';
-import { Card, Button, Dropdown, DropdownButton, Badge } from 'react-bootstrap'
+import { FiZap, FiCpu, FiClock } from 'react-icons/fi';
+import '../css/Feeds.css';
 
-export default function Feeds(props) {
+// Helper function to format timestamp
+const formatTimestamp = (dateValue) => {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) {
+        return 'Invalid time';
+    }
+    return new Intl.DateTimeFormat('en-IN', {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true,
+        timeZone: 'Asia/Kolkata',
+    }).format(date);
+};
 
-    const feedData = props.feedsData;
 
-    // const onBoardSelect = (devCode, devFeed) => {
-    //     props.sendSelectedBoard(devCode, devFeed);
-    // };
+const FeedCard = ({ feed, boardName, feedName }) => {
+    if (!feed) return null;
+
+    // Use the timestamp from the feed data, assuming it has a 'time' property
+    const dbTimestamp = feed.time ? feed.time : null;
 
     return (
-        <>
-            {
-                Object.keys(feedData).map(feed => {
-                    if (feedData[feed].isSelected) {
-                        return (
-                            <Card>
-                                <Card.Body>
-                                    <Card.Title>{feed}</Card.Title>
-                                    <Card.Text>
-                                        {feedData[feed].value}
-                                    </Card.Text>
-                                </Card.Body>
-                            </Card >
-                        )
-                    }
-                })
-            }
-        </>
+        <div className="feed-card">
+            <div className="feed-card-header">
+                <FiZap className="feed-icon" />
+                <span className="feed-name">{feedName}</span>
+            </div>
+            <div className="feed-card-body">
+                <div className="feed-value">{feed.value}</div>
+            </div>
+            <div className="feed-card-footer">
+                <div className="feed-board-info">
+                    <FiCpu className="board-icon" />
+                    <span>{boardName}</span>
+                </div>
+                <div className="feed-timestamp">
+                    <FiClock className="board-icon" />
+                    {dbTimestamp ? formatTimestamp(dbTimestamp) : 'No timestamp'}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default function Feeds(props) {
+    const [selectedFeeds, setSelectedFeeds] = useState([]);
+
+    useEffect(() => {
+        if (props.feedData) {
+            const allBoards = Object.values(props.feedData);
+            const feeds = allBoards.flatMap(board => {
+                if (board.devFeeds) {
+                    return Object.keys(board.devFeeds)
+                        .filter(feedName => board.devFeeds[feedName].isSelected)
+                        .map(feedName => ({
+                            ...board.devFeeds[feedName],
+                            boardName: board.name,
+                            feedName: feedName,
+                            id: `${board.deviceCode}-${feedName}`
+                        }));
+                }
+                return [];
+            });
+            setSelectedFeeds(feeds);
+        } else {
+            setSelectedFeeds([]);
+        }
+    }, [props.feedData]);
+
+    if (selectedFeeds.length === 0) {
+        return (
+            <div style={{ textAlign: 'center', color: '#888', marginTop: '50px' }}>
+                <h2>No Feeds Selected</h2>
+                <p>Please select a feed from a board to see its data.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="feeds-grid">
+            {selectedFeeds.map(feed => (
+                <FeedCard key={feed.id} feed={feed} boardName={feed.boardName} feedName={feed.feedName} />
+            ))}
+        </div>
     );
 }
-
-{/* <Card style={{ width: '8rem' }}>
-<Card.Img variant="top" style={{ width: "100%" }} src="../../mcu.svg" />
-<Card.Body>
-    <Card.Title>{props.boardData.name}</Card.Title>
-    <Card.Text>
-    {props.boardData.deviceCode}
-    </Card.Text>
-    <Button onClick={()=>onBoardSelect(props.boardData.deviceCode)} variant="primary">Select</Button>
-</Card.Body>
-</Card> */}
-
