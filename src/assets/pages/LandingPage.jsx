@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '../../firebase';
+import { auth, db, dbAddress } from '../configs/firebase_config';
 import { ref, onValue, get, set, update } from 'firebase/database';
 import { Container, Button, Modal, Form } from 'react-bootstrap';
 
+import { FaPlus } from 'react-icons/fa';
+
 import Boards from '../components/Boards';
 import Feeds from '../components/Feeds';
+
+import { updateValuesToDatabase, setValueToDatabase } from "../functions/commonFunctions"
 
 
 export default function LandingPage() {
@@ -13,29 +17,29 @@ export default function LandingPage() {
     const [dbData, setDBData] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [deviceCode, setDeviceCode] = useState('');
+    const [deviceName, setDeviceName] = useState('');
 
     const handleClose = () => setShowModal(false);
     const handleShow = () => setShowModal(true);
 
     const handleSaveDevice = () => {
         if (deviceCode && userUid) {
+
             const newDeviceData = {
-                devFeeds: {},
-                devCode: deviceCode,
+                name: deviceName,
+                deviceCode:deviceCode
             };
-            set(ref(db, `${userUid}/${deviceCode}`), newDeviceData)
-                .then(() => {
-                    console.log('Device added successfully');
-                })
-                .catch(err => console.log(err));
+
+            updateValuesToDatabase(`/device/${deviceCode}`, { uid: userUid });
             setDeviceCode('');
+            setDeviceName('');
             handleClose();
         }
     };
 
     const boardSelection = (devCode, devFeed) => {
         const feedStatus = dbData[devCode].devFeeds[devFeed].isSelected;
-        updateDatabase(`${devCode}/devFeeds/${devFeed}`, { "isSelected": !feedStatus });
+        updateValuesToDatabase(`${userUid}/${devCode}/devFeeds/${devFeed}`, { "isSelected": !feedStatus });
     }
 
     useEffect(() => {
@@ -65,17 +69,17 @@ export default function LandingPage() {
         return () => unSubs();
     }
 
-    const updateDatabase = (reference, feed) => {
-        const dbRef = ref(db, `${userUid}/${reference}`);
-        update(dbRef, feed)
-            .then(() => console.log('Data Written Successfully'))
-            .catch(err => console.log(err));
-    }
+    // const updateDatabase = (reference, feed) => {
+    //     const dbRef = ref(db, `${userUid}/${reference}`);
+    //     update(dbRef, feed)
+    //         .then(() => console.log('Data Written Successfully'))
+    //         .catch(err => console.log(err));
+    // }
 
     return (
         <Container fluid className='bg-dark text-light flex-grow-1 overflow-auto pb-5'>
             <Container className='d-flex justify-content-between align-items-center pt-2'>
-                <div className='d-flex justify-content-start gap-3'>
+                <div className='d-flex justify-content-start gap-3 align-items-center flex-wrap'>
                     {
                         (dbData)
                             ? Object.keys(dbData).map(data => {
@@ -86,8 +90,9 @@ export default function LandingPage() {
                             : "No Data"
                     }
                 </div>
+
                 <Button variant="primary" onClick={handleShow}>
-                    Add Device
+                    <FaPlus />
                 </Button>
             </Container>
             <Container className='d-flex justify-content-start gap-3 pt-2'>
@@ -109,6 +114,17 @@ export default function LandingPage() {
                                 onChange={(e) => setDeviceCode(e.target.value)}
                             />
                         </Form.Group>
+
+                        <Form.Group className="mb-3" controlId="formDeviceName">
+                            <Form.Label>Device Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter device name"
+                                value={deviceName}
+                                onChange={(e) => setDeviceName(e.target.value)}
+                            />
+                        </Form.Group>
+                        <span className='text-info'>{dbAddress}</span>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>

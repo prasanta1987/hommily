@@ -39,7 +39,7 @@ export default function Boards(props) {
 
 
     return (
-        props.boardData.hasOwnProperty("name")
+        (props.boardData.hasOwnProperty("name") && props.boardData.hasOwnProperty("deviceCode"))
             ?
             <>
                 <div className="boards-dropdown">
@@ -99,6 +99,6 @@ export default function Boards(props) {
                     </Modal.Footer>
                 </Modal>
             </>
-            : <p>BLANK</p>
+            : <span>Error in Board</span>
     );
 }
