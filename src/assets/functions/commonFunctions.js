@@ -12,7 +12,7 @@ const updateValuesToDatabase = (reference, feed) => {
 
 const setValueToDatabase = (reference, feed) => {
     const dbRef = ref(db, reference);
-    update(dbRef, feed)
+    set(dbRef, feed)
         .then(() => console.log('Data Written Successfully'))
         .catch(err => console.log(err));
 }

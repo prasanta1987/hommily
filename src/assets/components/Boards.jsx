@@ -3,16 +3,19 @@ import { Badge, Modal, Button, Form } from 'react-bootstrap';
 import { FiHardDrive, FiChevronDown, FiChevronUp, FiEdit } from 'react-icons/fi';
 import '../css/Boards.css';
 
+import { setValueToDatabase } from '../functions/commonFunctions';
+
 export default function Boards(props) {
     const [isOpen, setIsOpen] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [boardName, setBoardName] = useState(props.boardData.name);
-    const [newBoardName, setNewBoardName] = useState(props.boardData.name);
+    const [deviceCode, setDeviceCode] = useState(props.boardData.deviceCode);
 
     useEffect(() => {
+
         setBoardName(props.boardData.name);
-        setNewBoardName(props.boardData.name);
-    }, [props.boardData.name]);
+        setDeviceCode(props.boardData.deviceCode);
+    }, [props.boardData.name, props.boardData.deviceCode]);
 
 
     const onFeedSelect = (devCode, devFeed) => {
@@ -23,19 +26,24 @@ export default function Boards(props) {
     const toggleDropdown = () => setIsOpen(!isOpen);
 
     const handleShowModal = () => {
-        setNewBoardName(boardName); // Reset input field to current name
+        setBoardName(boardName); // Reset input field to current name
         setShowModal(true);
         setIsOpen(false); // Close dropdown when opening modal
     };
     const handleCloseModal = () => setShowModal(false);
 
     const handleSaveName = () => {
-        setBoardName(newBoardName);
+        setBoardName(boardName);
         // Here you would typically call a prop function to update the name in the parent component, e.g.:
-        // props.onBoardNameChange(props.boardData.deviceCode, newBoardName);
-        console.log(`Board name changed to: ${newBoardName}`);
+        // props.onBoardNameChange(props.boardData.deviceCode, boardName);
+        console.log(`Board name changed to: ${boardName}`);
         handleCloseModal();
     };
+
+    const deleteBoard = () => {
+        console.log(deviceCode);
+        setValueToDatabase(`${props.uid}/${deviceCode}`, null);
+    }
 
 
     return (
@@ -51,7 +59,7 @@ export default function Boards(props) {
                     {isOpen && (
                         <div className="boards-dropdown-menu">
                             <div className="boards-dropdown-header">
-                                {boardName}: Feeds
+                                {boardName}
                                 <FiEdit onClick={handleShowModal} style={{ cursor: 'pointer', marginLeft: '10px' }} />
                             </div>
                             {(props.boardData.devFeeds) &&
@@ -59,12 +67,12 @@ export default function Boards(props) {
                                     const isSelected = props.boardData.devFeeds[devFeed].isSelected;
                                     return (
                                         <div
-                                            className={`boards-dropdown-item ${isSelected ? "selected" : ""}`}
+                                            className={`boards-dropdown-item ${isSelected ? "bg-primary text-light" : ""}`}
                                             key={devFeed}
                                             onClick={() => onFeedSelect(props.boardData.deviceCode, devFeed)}
                                         >
                                             <span>{devFeed}</span>
-                                            <Badge>{props.boardData.devFeeds[devFeed].value}</Badge>
+                                            <Badge className='bg-dark'>{props.boardData.devFeeds[devFeed].value}</Badge>
                                         </div>
                                     )
                                 })
@@ -83,15 +91,16 @@ export default function Boards(props) {
                                 <Form.Label>Board Name</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    value={newBoardName}
-                                    onChange={(e) => setNewBoardName(e.target.value)}
+                                    value={boardName}
+                                    onChange={(e) => setBoardName(e.target.value)}
                                 />
                             </Form.Group>
                         </Form>
                     </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={handleCloseModal}>
-                            Close
+                    <Modal.Footer className='d-flex justify-content-between'>
+                        <Button variant="danger"
+                            onClick={deleteBoard}>
+                            Delete
                         </Button>
                         <Button variant="primary" onClick={handleSaveName}>
                             Save Changes

@@ -5,7 +5,6 @@ import Footer from './assets/pages/Footer'
 import LandingPage from './assets/pages/LandingPage'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <div className='d-flex flex-column vh-100'>

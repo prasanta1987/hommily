@@ -25,12 +25,14 @@ export default function LandingPage() {
     const handleSaveDevice = () => {
         if (deviceCode && userUid) {
 
-            const newDeviceData = {
+            updateValuesToDatabase(`/device/${deviceCode}`, {
+                uid: userUid,
+                deviceName: deviceName
+            });
+            updateValuesToDatabase(`/${userUid}/${deviceCode}`, {
                 name: deviceName,
-                deviceCode:deviceCode
-            };
-
-            updateValuesToDatabase(`/device/${deviceCode}`, { uid: userUid });
+                deviceCode: deviceCode,
+            });
             setDeviceCode('');
             setDeviceName('');
             handleClose();
@@ -69,13 +71,6 @@ export default function LandingPage() {
         return () => unSubs();
     }
 
-    // const updateDatabase = (reference, feed) => {
-    //     const dbRef = ref(db, `${userUid}/${reference}`);
-    //     update(dbRef, feed)
-    //         .then(() => console.log('Data Written Successfully'))
-    //         .catch(err => console.log(err));
-    // }
-
     return (
         <Container fluid className='bg-dark text-light flex-grow-1 overflow-auto pb-5'>
             <Container className='d-flex justify-content-between align-items-center pt-2'>
@@ -84,7 +79,12 @@ export default function LandingPage() {
                         (dbData)
                             ? Object.keys(dbData).map(data => {
                                 return (
-                                    <Boards key={data} sendSelectedBoard={boardSelection} boardData={dbData[data]} />
+                                    <Boards 
+                                    key={data}
+                                    sendSelectedBoard={boardSelection}
+                                    boardData={dbData[data]} 
+                                    uid = {userUid}
+                                    />
                                 )
                             })
                             : "No Data"
