@@ -12,7 +12,6 @@ export default function Boards(props) {
     const [deviceCode, setDeviceCode] = useState(props.boardData.deviceCode);
 
     useEffect(() => {
-
         setBoardName(props.boardData.name);
         setDeviceCode(props.boardData.deviceCode);
     }, [props.boardData.name, props.boardData.deviceCode]);
@@ -40,10 +39,7 @@ export default function Boards(props) {
         handleCloseModal();
     };
 
-    const deleteBoard = () => {
-        console.log(deviceCode);
-        setValueToDatabase(`${props.uid}/${deviceCode}`, null);
-    }
+    const deleteBoard = () => setValueToDatabase(`${props.uid}/${deviceCode}`, null);
 
 
     return (
@@ -108,6 +104,6 @@ export default function Boards(props) {
                     </Modal.Footer>
                 </Modal>
             </>
-            : <span>Error in Board</span>
+            : <span>Error:</span>
     );
 }

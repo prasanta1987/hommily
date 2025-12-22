@@ -13,7 +13,7 @@ import {
 } from 'react-bootstrap'
 
 
-export default function Navigationbar() {
+export default function Navigationbar(props) {
     const [user, setUser] = useState(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -27,18 +27,17 @@ export default function Navigationbar() {
 
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(user => {
-            setUser(user);
-            if (user) {
-                setShow(false);
-                setDisplayName(user.email);
-                console.log(user)
-            } else {
-                setDisplayName('');
-            }
-        });
-        return () => unsubscribe();
-    }, []);
+
+        if (props.userData) {
+            setUser(props.userData);
+            setDisplayName(props.userData.email);
+            setShow(false);
+        } else {
+            setUser(null);
+            setDisplayName('');
+        }
+
+    }, [props.userData]);
 
     const handleSingIn = () => {
 
