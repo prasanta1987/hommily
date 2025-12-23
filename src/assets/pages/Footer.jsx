@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
-import { updateValuesToDatabase } from "../functions/commonFunctions"
+import { updateValuesToDatabase } from "../functions/commonFunctions";
+import { authCode } from '../configs/firebase_config';
 
 export default function Footer(props) {
   const [deviceData, setDeviceData] = useState(null);
@@ -14,7 +15,6 @@ export default function Footer(props) {
 
   useEffect(() => {
     if (props.deviceData && props.userData) {
-      console.log(props.deviceData);
       setUserUid(props.userData.uid);
       setDeviceData(props.deviceData);
     }
@@ -36,11 +36,10 @@ export default function Footer(props) {
   };
 
   const handleSaveDeviceName = () => {
-    // console.log(selectedDevice);
 
     updateValuesToDatabase(`/device/${selectedDevice.id}`, {
-      uid: userUid,
-      deviceName: deviceName
+      deviceName: (deviceName !== '' ? deviceName : selectedDevice.deviceName || selectedDevice.deviceCode),
+      authCode: authCode
     });
 
     handleCloseModal();
@@ -49,7 +48,7 @@ export default function Footer(props) {
   const unassignedDevices = deviceData
     ? Object.keys(deviceData)
       .map((key) => ({ id: key, ...deviceData[key] }))
-      .filter((device) => device.uid == null)
+      .filter((device) => device.uid == userUid && device.authCode == null)
     : [];
 
   return (
@@ -67,7 +66,7 @@ export default function Footer(props) {
                   className='m-1 bg-primary'
                   onClick={() => handleShowModal(device)}
                 >
-                  {device.deviceName}
+                  {device.deviceName || device.deviceCode}
                 </Button>
               ))}
             </div>
@@ -81,13 +80,13 @@ export default function Footer(props) {
         </Modal.Header>
         <Modal.Body>
           <p>
-            Current Device: <strong>{selectedDevice?.deviceName}</strong>
+            Current Device: <strong>{selectedDevice?.deviceName || selectedDevice?.deviceCode}</strong>
           </p>
           <Form.Group controlId='formDeviceName'>
             <Form.Label>New Device Name</Form.Label>
             <Form.Control
               type='text'
-              placeholder='Enter device name'
+              placeholder="Enter New Device Name"
               value={deviceName}
               onChange={handleDeviceNameChange}
             />

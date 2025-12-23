@@ -3,7 +3,7 @@ import { Badge, Modal, Button, Form } from 'react-bootstrap';
 import { FiHardDrive, FiChevronDown, FiChevronUp, FiEdit } from 'react-icons/fi';
 import '../css/Boards.css';
 
-import { setValueToDatabase } from '../functions/commonFunctions';
+import { setValueToDatabase, updateValuesToDatabase } from '../functions/commonFunctions';
 
 export default function Boards(props) {
     const [isOpen, setIsOpen] = useState(false);
@@ -12,6 +12,7 @@ export default function Boards(props) {
     const [deviceCode, setDeviceCode] = useState(props.boardData.deviceCode);
 
     useEffect(() => {
+        console.log(props.boardData);
         setBoardName(props.boardData.name);
         setDeviceCode(props.boardData.deviceCode);
     }, [props.boardData.name, props.boardData.deviceCode]);
@@ -39,15 +40,23 @@ export default function Boards(props) {
         handleCloseModal();
     };
 
-    const deleteBoard = () => setValueToDatabase(`${props.uid}/${deviceCode}`, null);
+
+
+    const deleteBoard = () => {
+        // setValueToDatabase(`${props.uid}/${deviceCode}`, null)
+        updateValuesToDatabase(`${props.uid}/${deviceCode}`, {
+            "isDeleted": props.boardData.isDeleted ? false : true
+        })
+        setShowModal(false);
+    };
 
 
     return (
         (props.boardData.hasOwnProperty("name") && props.boardData.hasOwnProperty("deviceCode"))
             ?
             <>
-                <div className="boards-dropdown">
-                    <button onClick={toggleDropdown} className="boards-dropdown-toggle">
+                <div className={"boards-dropdown"}>
+                    <button onClick={toggleDropdown} className={`boards-dropdown-toggle ${props.boardData.isDeleted && "bg-warning"}`}>
                         <FiHardDrive className="boards-dropdown-item-icon" />
                         <span>{boardName}</span>
                         {isOpen ? <FiChevronUp /> : <FiChevronDown />}
@@ -94,9 +103,9 @@ export default function Boards(props) {
                         </Form>
                     </Modal.Body>
                     <Modal.Footer className='d-flex justify-content-between'>
-                        <Button variant="danger"
+                        <Button variant={`${props.boardData.isDeleted ? "success" : "danger"}`}
                             onClick={deleteBoard}>
-                            Delete
+                            {props.boardData.isDeleted ? "Restore" : "Delete"}
                         </Button>
                         <Button variant="primary" onClick={handleSaveName}>
                             Save Changes

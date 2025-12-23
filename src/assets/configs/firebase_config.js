@@ -23,5 +23,6 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 const dbAddress = firebaseConfig.databaseURL;
+const authCode = "bYnHWxLhCbrycybPw4aACuYrvLtaJfpi8pwFvXJX"
 
-export { app, auth, db, dbAddress };
+export { app, auth, db, dbAddress, authCode };

@@ -1,7 +1,9 @@
+
 import './assets/css/App.css'
 import Navbar from './assets/pages/Navbar'
 import Footer from './assets/pages/Footer'
 import LandingPage from './assets/pages/LandingPage'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 import { useEffect, useState } from 'react'
 
