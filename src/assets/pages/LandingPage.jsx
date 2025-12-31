@@ -9,6 +9,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import Boards from '../components/Boards';
 import Feeds from '../components/Feeds';
+import NoAuthPage from '../components/NoAuthPage';
 
 import { updateValuesToDatabase } from "../functions/commonFunctions"
 import { dbAddress } from "../configs/firebase_config"
@@ -83,7 +84,7 @@ String host = "${dbAddress}";
                                     />
                                 )
                             })
-                            : "No Data"
+                            : <NoAuthPage />
                     }
                 </div>
                 {

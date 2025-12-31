@@ -37,6 +37,10 @@ export default function Boards(props) {
         // Here you would typically call a prop function to update the name in the parent component, e.g.:
         // props.onBoardNameChange(props.boardData.deviceCode, boardName);
         console.log(`Board name changed to: ${boardName}`);
+
+        updateValuesToDatabase(`${props.uid}/${deviceCode}`, {
+            "name": boardName
+        })
         handleCloseModal();
     };
 
