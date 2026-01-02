@@ -10,6 +10,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import Boards from '../components/Boards';
 import Feeds from '../components/Feeds';
 import NoAuthPage from '../components/NoAuthPage';
+import NoBoardPage from '../components/NoBoardPage';
 
 import { updateValuesToDatabase } from "../functions/commonFunctions"
 import { dbAddress } from "../configs/firebase_config"
@@ -73,18 +74,20 @@ String host = "${dbAddress}";
             <Container className='d-flex justify-content-between align-items-center pt-2'>
                 <div className='d-flex justify-content-start gap-3 align-items-center flex-wrap'>
                     {
-                        (dbData)
-                            ? Object.keys(dbData).map(data => {
-                                return (
-                                    <Boards
-                                        key={data}
-                                        sendSelectedBoard={boardSelection}
-                                        boardData={dbData[data]}
-                                        uid={userUid}
-                                    />
-                                )
-                            })
-                            : <NoAuthPage />
+                        (userUid) ?
+                            (dbData)
+                                ? Object.keys(dbData).map(data => {
+                                    return (
+                                        <Boards
+                                            key={data}
+                                            sendSelectedBoard={boardSelection}
+                                            boardData={dbData[data]}
+                                            uid={userUid}
+                                        />
+                                    )
+                                })
+                                : <NoBoardPage />
+                                : <NoAuthPage />
                     }
                 </div>
                 {

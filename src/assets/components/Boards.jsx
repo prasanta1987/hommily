@@ -47,76 +47,87 @@ export default function Boards(props) {
 
 
     const deleteBoard = () => {
-        // setValueToDatabase(`${props.uid}/${deviceCode}`, null)
         updateValuesToDatabase(`${props.uid}/${deviceCode}`, {
             "isDeleted": props.boardData.isDeleted ? false : true
         })
         setShowModal(false);
     };
 
+    const forceDeleteBoard = () => {
+        setValueToDatabase(`${props.uid}/${deviceCode}`, null)
+        setShowModal(false);
+    }
+
 
     return (
         (props.boardData.hasOwnProperty("name") && props.boardData.hasOwnProperty("deviceCode"))
-            ?
-            <>
-                <div className={"boards-dropdown"}>
-                    <button onClick={toggleDropdown} className={`boards-dropdown-toggle ${props.boardData.isDeleted && "bg-warning"}`}>
-                        <FiHardDrive className="boards-dropdown-item-icon" />
-                        <span>{boardName}</span>
-                        {isOpen ? <FiChevronUp /> : <FiChevronDown />}
-                    </button>
-                    {isOpen && (
-                        <div className="boards-dropdown-menu">
-                            <div className="boards-dropdown-header">
-                                {boardName}
-                                <FiEdit onClick={handleShowModal} style={{ cursor: 'pointer', marginLeft: '10px' }} />
-                            </div>
-                            {(props.boardData.devFeeds) &&
-                                Object.keys(props.boardData.devFeeds).map(devFeed => {
-                                    const isSelected = props.boardData.devFeeds[devFeed].isSelected;
-                                    return (
-                                        <div
-                                            className={`boards-dropdown-item ${isSelected ? "bg-primary text-light" : ""}`}
-                                            key={devFeed}
-                                            onClick={() => onFeedSelect(props.boardData.deviceCode, devFeed)}
-                                        >
-                                            <span>{devFeed}</span>
-                                            <Badge className='bg-dark'>{props.boardData.devFeeds[devFeed].value}</Badge>
-                                        </div>
-                                    )
-                                })
-                            }
+        &&
+        <>
+            <div className={"boards-dropdown"}>
+                <button onClick={toggleDropdown} className={`boards-dropdown-toggle ${props.boardData.isDeleted && "bg-warning"}`}>
+                    <FiHardDrive className="boards-dropdown-item-icon" />
+                    <span>{boardName}</span>
+                    {isOpen ? <FiChevronUp /> : <FiChevronDown />}
+                </button>
+                {isOpen && (
+                    <div className="boards-dropdown-menu">
+                        <div className="boards-dropdown-header">
+                            {boardName}
+                            <FiEdit onClick={handleShowModal} style={{ cursor: 'pointer', marginLeft: '10px' }} />
                         </div>
-                    )}
-                </div>
+                        {(props.boardData.devFeeds) &&
+                            Object.keys(props.boardData.devFeeds).map(devFeed => {
+                                const isSelected = props.boardData.devFeeds[devFeed].isSelected;
+                                return (
+                                    <div
+                                        className={`boards-dropdown-item ${isSelected ? "bg-primary text-light" : ""}`}
+                                        key={devFeed}
+                                        onClick={() => onFeedSelect(props.boardData.deviceCode, devFeed)}
+                                    >
+                                        <span>{devFeed}</span>
+                                        <Badge className='bg-dark'>{props.boardData.devFeeds[devFeed].value}</Badge>
+                                    </div>
+                                )
+                            })
+                        }
+                    </div>
+                )}
+            </div>
 
-                <Modal show={showModal} onHide={handleCloseModal}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Edit Board Name</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <Form>
-                            <Form.Group className="mb-3" controlId="formBoardName">
-                                <Form.Label>Board Name</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    value={boardName}
-                                    onChange={(e) => setBoardName(e.target.value)}
-                                />
-                            </Form.Group>
-                        </Form>
-                    </Modal.Body>
-                    <Modal.Footer className='d-flex justify-content-between'>
-                        <Button variant={`${props.boardData.isDeleted ? "success" : "danger"}`}
+            <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Board Name</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3" controlId="formBoardName">
+                            <Form.Label>Board Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={boardName}
+                                onChange={(e) => setBoardName(e.target.value)}
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer className='d-flex justify-content-between'>
+                    <div className='d-flex justify-content-between gap-1'>
+                        <Button variant={`${props.boardData.isDeleted ? "success" : "warning"}`}
                             onClick={deleteBoard}>
                             {props.boardData.isDeleted ? "Restore" : "Delete"}
                         </Button>
-                        <Button variant="primary" onClick={handleSaveName}>
-                            Save Changes
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-            </>
-            : <span>Error:</span>
+                        {
+                            props.boardData.isDeleted &&
+                            <Button variant="danger" onClick={forceDeleteBoard}>
+                                Force Delete
+                            </Button>
+                        }
+                    </div>
+                    <Button variant="primary" onClick={handleSaveName}>
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </>
     );
 }

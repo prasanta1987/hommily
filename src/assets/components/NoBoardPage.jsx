@@ -5,11 +5,11 @@ import {
 } from 'react-bootstrap'
 
 
-export default function NoAuthPage() {
+export default function NoBoardPage() {
 
     return (
         <>
-            <h1>Please Log in or Sign up.</h1>
+            <h1>No Board Added Yet</h1>
         </>
     )
 }

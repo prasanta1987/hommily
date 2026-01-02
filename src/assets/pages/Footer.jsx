@@ -54,7 +54,7 @@ export default function Footer(props) {
   return (
 
     <>
-      {unassignedDevices.length > 0 && (
+      {(unassignedDevices.length > 0 && props.userData) && (
         <footer className='fixed-bottom text-white bg-dark p-3'>
           <div className='container'>
             <h5>Unassigned Devices</h5>

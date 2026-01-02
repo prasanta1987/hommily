@@ -18,7 +18,7 @@ export default function Navigationbar(props) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [show, setShow] = useState(false);
-    const [displayName, setDisplayName] = useState('');
+    const [displayName, setDisplayName] = useState('Guest');
     const [errorMsg, setErrorMsg] = useState(null);
 
 
@@ -34,7 +34,8 @@ export default function Navigationbar(props) {
             setShow(false);
         } else {
             setUser(null);
-            setDisplayName('');
+            setDisplayName('Guest');
+            setErrorMsg('');
         }
 
     }, [props.userData]);
@@ -71,8 +72,8 @@ export default function Navigationbar(props) {
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="me-auto">
-                            <Nav.Link href="#home">Home</Nav.Link>
-                            <Nav.Link href="#link">Link</Nav.Link>
+                            {/* <Nav.Link href="#home">Home</Nav.Link>
+                            <Nav.Link href="#link">Link</Nav.Link> */}
                         </Nav>
                         {
                             user ? <Button onClick={handleSignOut} variant="outline-danger">Log Out</Button>
@@ -85,7 +86,7 @@ export default function Navigationbar(props) {
 
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Modal heading</Modal.Title>
+                    <Modal.Title>Please Sign in or Sign up</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
@@ -111,7 +112,7 @@ export default function Navigationbar(props) {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleSingIn}>
+                    <Button variant="success" onClick={handleSingIn}>
                         Sign In
                     </Button>
                     <Button variant="primary" onClick={handleSingUp}>
