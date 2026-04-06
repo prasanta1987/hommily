@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP8266 Debugger | Hommily</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes pulse-soft {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-[#020617] text-slate-100 min-vh-100 selection:bg-indigo-500/30">
+
+    <!-- Mock API Layer (Crucial for testing esp.js in browser) -->
+    <script>
+        // Mock State
+        // let currentMockMac = "483FDAA8F536";
+        let currentMockMac = localStorage.getItem('mock_mac') || "2C3AE8087558";
+        window.setMockMac = (mac) => {
+            localStorage.setItem('mock_mac', mac);
+            location.reload();
+        };
+
+        // Store the original fetch
+        const originalFetch = window.fetch;
+
+        // Mocking the ESP8266 environment
+        window.fetch = function (url, options) {
+            // Mock System Status
+            if (url === '/api/status') {
+                console.log(`%c[MOCK API] Status Requested (${currentMockMac})`, "color: #0ea5e9; font-weight: bold;");
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({
+                        mac: currentMockMac,
+                        free: 45000 + Math.random() * 5000,
+                        total: 81920,
+                        uptime: Math.floor(performance.now() / 1000)
+                    })
+                });
+            }
+
+            // Mock Pin Control
+            if (url.startsWith('/api/control')) {
+                const params = new URLSearchParams(url.split('?')[1]);
+                console.log("%c[MOCK API] Control Sent:", "color: #6366f1; font-weight: bold;",
+                    `GPIO ${params.get('pin')} -> ${params.get('state') == '1' ? 'ON' : 'OFF'}`);
+                return Promise.resolve({ ok: true });
+            }
+
+            // Pass through other requests (like Firebase)
+            return originalFetch(url, options);
+        };
+    </script>
+
+
+    <div class="max-w-3xl mx-auto px-6 py-12">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-2">
+            <div>
+                <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                    Hommily Lite</h1>
+                <p class="text-slate-500 text-sm font-medium mt-1">ESP8266 Controller Dashboard</p>
+            </div>
+            <div
+                class="h-12 w-12 rounded-2xl bg-indigo-600/20 flex items-center justify-center border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
+                <i data-lucide="cpu" class="text-indigo-400 w-6 h-6"></i>
+            </div>
+        </header>
+
+
+        <!-- Device Container -->
+        <div id="device-container" class="space-y-4">
+            <!-- Rendered by esp.js -->
+            <div class="text-center py-12 text-slate-500 transition-opacity duration-500" id="loading-placeholder">
+                <div
+                    class="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-indigo-500 rounded-full mb-3">
+                </div>
+                <p class="text-xs font-medium">Syncing with hardware...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main ESP Logic (Module Script) -->
+    <script type="module" src="esp.js"></script>
+
+    <script>
+        // Small helper to update debug logs on page
+        const logElem = document.getElementById('debug-log');
+        const originalLog = console.log;
+        console.log = (...args) => {
+            if (typeof args[0] === 'string' && args[0].includes('Subscribing')) {
+                logElem.innerText = "Real-time Connected";
+                document.getElementById('loading-placeholder')?.remove();
+            }
+            originalLog(...args);
+        };
+    </script>
+
+</body>
+
+</html>
