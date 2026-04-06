@@ -5,7 +5,7 @@
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
-import { auth, db } from "https://hommily.web.app/firebase-config.js";
+import { auth, db } from "./firebase-config.js";
 
 // --- State Management ---
 const CACHE_KEY = 'hommily_local_data';
