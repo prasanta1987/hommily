@@ -44,9 +44,10 @@ const injectCSS = () => {
             -webkit-tap-highlight-color: transparent;
         }
         #device-container { padding: 16px; max-width: 1000px; margin: 0 auto; }
-        .stats-row { display: flex; gap: 12px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px; }
+        .stats-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px; }
         .stats-row::-webkit-scrollbar { display: none; }
-        .stats-card { 
+        .stats-card {
+            width:100%;
             background: var(--card); border: 1px solid rgba(255,255,255,0.05);
             border-radius: 1.25rem; padding: 12px 20px; min-width: 170px;
             display: flex; align-items: center; gap: 12px;
@@ -61,8 +62,8 @@ const injectCSS = () => {
         }
         .deviceDescription { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px; }
         .card-glass { 
-            background: var(--card); border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05);
-            padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center;
+            background: var(--card); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);
+            padding: 5px 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center;
             transition: transform 0.2s ease;
         }
         .card-glass:active { transform: scale(0.98); }
@@ -96,7 +97,7 @@ function renderHeader() {
     const target = document.getElementById('header-target');
     if (!target) return;
     const ramPercent = Math.round((lastStats.free / lastStats.total) * 100) || 0;
-    const authMail = auth.currentUser ? (auth.currentUser.email || "Hub User") : "Guest";
+    const authMail = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email || "Hub User") : "Guest";
     target.innerHTML = `
         <div class="auth-status">
             <div style="text-align:right"><span class="label-text" style="display:block">Authenticated As</span><strong>${authMail}</strong></div>
@@ -127,7 +128,11 @@ function renderDevices() {
 
     const macs = Object.keys(allDevices);
     if (macs.length === 0) {
-        target.innerHTML = `<div style="text-align:center; padding:60px; color:#4b5563;"><i data-lucide="server-off" style="width:48px; height:48px; opacity:0.2"></i><p>Waiting for cloud data...</p></div>`;
+        target.innerHTML = `
+            <div style="text-align:center; padding:60px; color:#4b5563;">
+                <i data-lucide="server-off" style="width:48px; height:48px; opacity:0.2"></i>
+                <p>Waiting for cloud data...</p>
+            </div>`;
         if (window.lucide) lucide.createIcons();
         return;
     }
@@ -135,7 +140,10 @@ function renderDevices() {
     target.innerHTML = macs.map(mac => `
         <div class="feedsContainer">
             <div class="deviceDescription">
-                <div class="device-label"><i data-lucide="cpu" class="w-3 h-3"></i> ${allDevices[mac].deviceName || 'Smart Hub'}</div>
+                <div class="device-label">
+                    <i data-lucide="cpu" class="w-3 h-3"></i>
+                    ${allDevices[mac].deviceName || 'Smart Hub'}
+                </div>
                 <span style="font-size:10px; font-family:monospace; color:#4b5563;">${mac}</span>
             </div>
             <div class="dashboard-grid">${renderFeeds(mac, allDevices[mac].devFeeds)}</div>
@@ -181,16 +189,16 @@ window.handleToggle = async (mac, feedId, uiState) => {
     clearTimeout(interactionTimer);
 
     const newUiValue = uiState ? 1 : 0;
-    if(allDevices[mac] && allDevices[mac].devFeeds[feedId]) {
+    if (allDevices[mac] && allDevices[mac].devFeeds[feedId]) {
         allDevices[mac].devFeeds[feedId].value = newUiValue;
         localStorage.setItem(CACHE_KEY, JSON.stringify(allDevices));
-        renderDevices(); 
+        renderDevices();
 
         const f = allDevices[mac].devFeeds[feedId];
         const hwValue = f.isSwapped ? (uiState ? 0 : 1) : newUiValue;
 
         if (mac === currentLocalMac) {
-            fetch(`/api/control?pin=${f.GPIO}&state=${hwValue}`).catch(() => {});
+            fetch(`/api/control?pin=${f.GPIO}&state=${hwValue}`).catch(() => { });
         }
 
         if (auth.currentUser) {
