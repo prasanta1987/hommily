@@ -24,6 +24,7 @@ let allDevices = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
 let openDropdown = null;
 let currentLocalMac = localStorage.getItem('hommily_cache_mac') || "";
 let lastStats = { free: 0, total: 1, uptime: 0 };
+let isUpdating = false;
 
 const injectCSS = () => {
     if (document.getElementById('hommily-styles')) return;
@@ -85,10 +86,10 @@ function renderHeader() {
                 <span class="label-text" style="display:block">Authenticated As</span>
                 <strong>${authMail}</strong>
             </div>
-            ${auth.currentUser ? 
-                `<button onclick="auth.signOut()" style="width:auto; padding:8px 16px; border-radius:10px; background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2); cursor:pointer; font-weight:600; transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">Sign Out</button>` : 
-                `<button onclick="window.showLoginUI()" style="width:auto; padding:8px 16px; border-radius:10px; background:rgba(56, 189, 248, 0.1); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.2); cursor:pointer; font-weight:600; transition:0.2s;" onmouseover="this.style.background='rgba(56, 189, 248, 0.2)'" onmouseout="this.style.background='rgba(56, 189, 248, 0.1)'">Sign In</button>`
-            }
+            ${auth.currentUser ?
+            `<button onclick="auth.signOut()" style="width:auto; padding:8px 16px; border-radius:10px; background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2); cursor:pointer; font-weight:600; transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">Sign Out</button>` :
+            `<button onclick="window.showLoginUI()" style="width:auto; padding:8px 16px; border-radius:10px; background:rgba(56, 189, 248, 0.1); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.2); cursor:pointer; font-weight:600; transition:0.2s;" onmouseover="this.style.background='rgba(56, 189, 248, 0.2)'" onmouseout="this.style.background='rgba(56, 189, 248, 0.1)'">Sign In</button>`
+        }
         </div>
         <div class="stats-row">
             <div class="stats-card">
@@ -181,16 +182,47 @@ function renderApp() {
 window.toggleMenu = (mac) => { openDropdown = (openDropdown === mac) ? null : mac; renderApp(); };
 
 window.toggleFeedSelection = (mac, feedId) => {
+
     allDevices[mac].devFeeds[feedId].isSelected = !allDevices[mac].devFeeds[feedId].isSelected;
     localStorage.setItem(CACHE_KEY, JSON.stringify(allDevices));
     renderApp();
 };
 
 window.handleToggle = async (mac, feedId, newState) => {
-    const val = newState ? 1 : 0;
-    allDevices[mac].devFeeds[feedId].value = val;
+    isUpdating = true;
+    const device = allDevices[mac];
+    const feed = device.devFeeds[feedId];
+    const newUiValue = newState ? 1 : 0;
+
+    // Hardware swapping logic (Active Low vs Active High)
+    const hwValue = feed.isSwapped ? (newState ? 0 : 1) : (newState ? 1 : 0);
+
+    // Update local state and UI immediately
+    feed.value = newUiValue;
     renderApp();
-    if (auth.currentUser) db.ref(`${auth.currentUser.uid}/${mac}/devFeeds/${feedId}`).update({ value: val });
+
+    try {
+        // 1. Local hardware control (instant response)
+        if (mac === currentLocalMac) {
+            fetch(`/api/control?pin=${feed.GPIO}&state=${hwValue}`)
+                .then(res => res.json())
+                .then(data => console.log(data))
+                .catch(err => console.error("Local control failed", err));
+        }
+
+        // 2. Cloud synchronization
+        if (auth.currentUser) {
+            await db.ref(`${auth.currentUser.uid}/${mac}/devFeeds/${feedId}`).update({ value: newUiValue });
+        }
+
+        // 3. Persist to cache
+        localStorage.setItem(CACHE_KEY, JSON.stringify(allDevices));
+    } catch (e) {
+        console.error("Toggle sync error", e);
+    } finally {
+        // Add a small delay for the database listener to settle
+        setTimeout(() => { isUpdating = false; }, 500);
+    }
 };
 
 window.tryLogin = async (e) => {
@@ -232,6 +264,7 @@ function init() {
         if (user) {
             document.getElementById('login-ui')?.remove();
             db.ref(user.uid).on('value', snap => {
+                if (isUpdating) return;
                 const cloudData = snap.val();
                 if (cloudData) {
                     // Sync selections
