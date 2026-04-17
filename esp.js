@@ -188,10 +188,26 @@ function renderApp() {
 window.toggleMenu = (mac) => { openDropdown = (openDropdown === mac) ? null : mac; renderApp(); };
 
 window.toggleFeedSelection = (mac, feedId) => {
-
     allDevices[mac].devFeeds[feedId].isSelected = !allDevices[mac].devFeeds[feedId].isSelected;
     localStorage.setItem(CACHE_KEY, JSON.stringify(allDevices));
     renderApp();
+};
+
+window.syncHardwareFromData = async (feeds) => {
+    if (!feeds || !currentLocalMac) return;
+    console.log("Hardware Sync: Restoring states...");
+    for (const fId of Object.keys(feeds)) {
+        const f = feeds[fId];
+        if (f.GPIO !== undefined && f.type !== "Gauge") {
+            const hwValue = f.isSwapped ? (f.value == 1 ? 0 : 1) : (f.value == 1 ? 1 : 0);
+            fetch(`/api/control?pin=${f.GPIO}&state=${hwValue}`)
+                .then(res => res.json())
+                .then(d => console.log(`Restored [${fId}]:`, d))
+                .catch(e => console.error(`Restore Failed [${fId}]`, e));
+            // Tiny delay to prevent overwhelming the ESP8266
+            await new Promise(r => setTimeout(r, 50));
+        }
+    }
 };
 
 window.handleToggle = async (mac, feedId, newState) => {
@@ -289,6 +305,11 @@ function init() {
 
     // Identify hardware THEN start sync
     identifyDevice().then(() => {
+        // Phase 1: Immediate Sync from Cache
+        if (allDevices[currentLocalMac]) {
+            window.syncHardwareFromData(allDevices[currentLocalMac].devFeeds);
+        }
+
         auth.onAuthStateChanged(user => {
             if (user && currentLocalMac) {
                 document.getElementById('login-ui')?.remove();
@@ -298,10 +319,12 @@ function init() {
                     if (isUpdating) return;
                     const deviceData = snap.val();
                     if (deviceData) {
-                        // --- Cloud-to-Hardware Sync ---
+                        // Phase 2: Update hardware if cloud data differs from current state
                         const oldFeeds = allDevices[currentLocalMac]?.devFeeds || {};
                         const newFeeds = deviceData.devFeeds || {};
-
+                        
+                        // We use the sync helper for the cloud update as well if needed
+                        // but only for changed values to avoid redundant traffic
                         Object.keys(newFeeds).forEach(fId => {
                             const nf = newFeeds[fId];
                             const of = oldFeeds[fId];
@@ -309,8 +332,8 @@ function init() {
                                 const hwValue = nf.isSwapped ? (nf.value == 1 ? 0 : 1) : (nf.value == 1 ? 1 : 0);
                                 fetch(`/api/control?pin=${nf.GPIO}&state=${hwValue}`)
                                     .then(res => res.json())
-                                    .then(d => console.log(`Sync Trigger [${fId}]:`, d))
-                                    .catch(e => console.error(`Sync Trigger Failed [${fId}]`, e));
+                                    .then(d => console.log(`Cloud Trigger [${fId}]:`, d))
+                                    .catch(e => console.error(`Cloud Trigger Failed [${fId}]`, e));
                             }
                         });
 
