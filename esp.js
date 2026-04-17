@@ -78,12 +78,16 @@ function renderHeader() {
     if (!target) return;
 
     const ramPercent = Math.round((lastStats.free / lastStats.total) * 100) || 0;
-    const authMail = auth.currentUser ? (auth.currentUser.email || "User") : "Guest";
+    const isOnline = navigator.onLine;
+    const authMail = auth.currentUser ? (auth.currentUser.email || "User") : (isOnline ? "Guest" : "Offline Mode");
 
     target.innerHTML = `
         <div class="auth-status">
             <div style="text-align:right">
-                <span class="label-text" style="display:block">Authenticated As</span>
+                <span class="label-text" style="display:block">
+                    ${isOnline ? 'Authenticated As' : 'Connection Status'} 
+                    ${!isOnline ? '<span style="color:var(--danger); font-size:9px; margin-left:4px;">● OFFLINE</span>' : ''}
+                </span>
                 <strong>${authMail}</strong>
             </div>
             ${auth.currentUser ?
@@ -272,7 +276,13 @@ function init() {
     const container = document.getElementById('device-container');
     if (container) container.innerHTML = `<div id="header-target"></div><div id="tabs-target" class="tabs-row"></div><div id="feeds-target" class="dashboard-grid"></div>`;
 
+    // 1. Immediate Render from Cache
+    renderHeader();
+    renderApp();
+
     setInterval(refreshStats, 3000);
+    window.addEventListener('online', renderHeader);
+    window.addEventListener('offline', renderHeader);
     
     // Identify hardware THEN start sync
     identifyDevice().then(() => {
