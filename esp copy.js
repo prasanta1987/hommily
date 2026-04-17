@@ -81,14 +81,8 @@ function renderHeader() {
 
     target.innerHTML = `
         <div class="auth-status">
-            <div style="text-align:right">
-                <span class="label-text" style="display:block">Authenticated As</span>
-                <strong>${authMail}</strong>
-            </div>
-            ${auth.currentUser ? 
-                `<button onclick="auth.signOut()" style="width:auto; padding:8px 16px; border-radius:10px; background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2); cursor:pointer; font-weight:600; transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">Sign Out</button>` : 
-                `<button onclick="window.showLoginUI()" style="width:auto; padding:8px 16px; border-radius:10px; background:rgba(56, 189, 248, 0.1); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.2); cursor:pointer; font-weight:600; transition:0.2s;" onmouseover="this.style.background='rgba(56, 189, 248, 0.2)'" onmouseout="this.style.background='rgba(56, 189, 248, 0.1)'">Sign In</button>`
-            }
+            <div style="text-align:right"><span class="label-text" style="display:block">Authenticated As</span><strong>${authMail}</strong></div>
+            <button onclick="auth.signOut()" style="width:auto; padding:6px 12px; border-radius:8px; background:#1e293b; color:#94a3b8; border:none; cursor:pointer;">Sign Out</button>
         </div>
         <div class="stats-row">
             <div class="stats-card">
@@ -251,12 +245,11 @@ function init() {
     });
 }
 
-window.showLoginUI = () => {
+function showLoginUI() {
     if (document.getElementById('login-ui')) return;
     const ui = document.createElement('div');
     ui.id = 'login-ui';
     ui.className = 'login-overlay';
-    ui.onclick = (e) => { if (e.target === ui) ui.remove(); };
     ui.innerHTML = `
         <div class="login-card">
             <div style="text-align:center; margin-bottom:20px;">
