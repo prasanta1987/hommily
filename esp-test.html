@@ -54,7 +54,7 @@
     <script>
         // Mock State
         // let currentMockMac = "483FDAA8F536";
-        let currentMockMac = localStorage.getItem('mock_mac') || "2C3AE8087558";
+        let currentMockMac = localStorage.getItem('mock_mac') || "483FDAA8F536";
         window.setMockMac = (mac) => {
             localStorage.setItem('mock_mac', mac);
             location.reload();

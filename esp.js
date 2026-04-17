@@ -254,29 +254,44 @@ async function refreshStats() {
 
 // --- Init ---
 
+async function identifyDevice() {
+    try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (data.mac) {
+            currentLocalMac = data.mac;
+            localStorage.setItem('hommily_cache_mac', currentLocalMac);
+        }
+    } catch (e) {
+        console.warn("Using cached MAC:", currentLocalMac);
+    }
+}
+
 function init() {
     injectCSS();
     const container = document.getElementById('device-container');
     if (container) container.innerHTML = `<div id="header-target"></div><div id="tabs-target" class="tabs-row"></div><div id="feeds-target" class="dashboard-grid"></div>`;
 
     setInterval(refreshStats, 3000);
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            document.getElementById('login-ui')?.remove();
-            db.ref(user.uid).on('value', snap => {
-                if (isUpdating) return;
-                const cloudData = snap.val();
-                if (cloudData) {
-                    // --- Cloud-to-Hardware Sync ---
-                    // Detect if any toggle values for the LOCAL device changed externally
-                    if (currentLocalMac && cloudData[currentLocalMac] && allDevices[currentLocalMac]) {
-                        const oldFeeds = allDevices[currentLocalMac].devFeeds || {};
-                        const newFeeds = cloudData[currentLocalMac].devFeeds || {};
+    
+    // Identify hardware THEN start sync
+    identifyDevice().then(() => {
+        auth.onAuthStateChanged(user => {
+            if (user && currentLocalMac) {
+                document.getElementById('login-ui')?.remove();
+                
+                // Narrowed listener: Only listen to THIS device
+                db.ref(`${user.uid}/${currentLocalMac}`).on('value', snap => {
+                    if (isUpdating) return;
+                    const deviceData = snap.val();
+                    if (deviceData) {
+                        // --- Cloud-to-Hardware Sync ---
+                        const oldFeeds = allDevices[currentLocalMac]?.devFeeds || {};
+                        const newFeeds = deviceData.devFeeds || {};
 
                         Object.keys(newFeeds).forEach(fId => {
                             const nf = newFeeds[fId];
                             const of = oldFeeds[fId];
-                            // Only trigger hardware if the value changed and it's a type that supports it
                             if (of && nf.value !== of.value && nf.GPIO !== undefined) {
                                 const hwValue = nf.isSwapped ? (nf.value == 1 ? 0 : 1) : (nf.value == 1 ? 1 : 0);
                                 fetch(`/api/control?pin=${nf.GPIO}&state=${hwValue}`)
@@ -285,24 +300,25 @@ function init() {
                                     .catch(e => console.error(`Sync Trigger Failed [${fId}]`, e));
                             }
                         });
-                    }
 
-                    // Sync persistence of 'isSelected' state
-                    Object.keys(cloudData).forEach(m => {
-                        Object.keys(cloudData[m].devFeeds || {}).forEach(f => {
-                            if (allDevices[m]?.devFeeds[f]) cloudData[m].devFeeds[f].isSelected = allDevices[m].devFeeds[f].isSelected;
+                        // Keep selections (local state)
+                        Object.keys(newFeeds).forEach(f => {
+                            if (allDevices[currentLocalMac]?.devFeeds[f]) {
+                                newFeeds[f].isSelected = allDevices[currentLocalMac].devFeeds[f].isSelected;
+                            }
                         });
-                    });
 
-                    allDevices = cloudData;
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(allDevices));
-                    renderHeader();
-                    renderApp();
-                }
-            });
-        } else {
-            // showLoginUI();
-        }
+                        // Transform scoped data back to structure expected by renderer
+                        allDevices = { [currentLocalMac]: deviceData };
+                        localStorage.setItem(CACHE_KEY, JSON.stringify(allDevices));
+                        renderHeader();
+                        renderApp();
+                    }
+                });
+            } else if (!user) {
+                // showLoginUI();
+            }
+        });
     });
 }
 
