@@ -267,13 +267,35 @@ function init() {
                 if (isUpdating) return;
                 const cloudData = snap.val();
                 if (cloudData) {
-                    // Sync selections
+                    // --- Cloud-to-Hardware Sync ---
+                    // Detect if any toggle values for the LOCAL device changed externally
+                    if (currentLocalMac && cloudData[currentLocalMac] && allDevices[currentLocalMac]) {
+                        const oldFeeds = allDevices[currentLocalMac].devFeeds || {};
+                        const newFeeds = cloudData[currentLocalMac].devFeeds || {};
+
+                        Object.keys(newFeeds).forEach(fId => {
+                            const nf = newFeeds[fId];
+                            const of = oldFeeds[fId];
+                            // Only trigger hardware if the value changed and it's a type that supports it
+                            if (of && nf.value !== of.value && nf.GPIO !== undefined) {
+                                const hwValue = nf.isSwapped ? (nf.value == 1 ? 0 : 1) : (nf.value == 1 ? 1 : 0);
+                                fetch(`/api/control?pin=${nf.GPIO}&state=${hwValue}`)
+                                    .then(res => res.json())
+                                    .then(d => console.log(`Sync Trigger [${fId}]:`, d))
+                                    .catch(e => console.error(`Sync Trigger Failed [${fId}]`, e));
+                            }
+                        });
+                    }
+
+                    // Sync persistence of 'isSelected' state
                     Object.keys(cloudData).forEach(m => {
                         Object.keys(cloudData[m].devFeeds || {}).forEach(f => {
                             if (allDevices[m]?.devFeeds[f]) cloudData[m].devFeeds[f].isSelected = allDevices[m].devFeeds[f].isSelected;
                         });
                     });
+
                     allDevices = cloudData;
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(allDevices));
                     renderHeader();
                     renderApp();
                 }
