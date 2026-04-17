@@ -15,8 +15,10 @@ const firebaseConfig = {
 
 // Initialize Firebase
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+window.auth = firebase.auth();
+window.db = firebase.database();
+const auth = window.auth;
+const db = window.db;
 
 // --- State Management ---
 const CACHE_KEY = 'hommily_local_data';
@@ -283,13 +285,13 @@ function init() {
     setInterval(refreshStats, 3000);
     window.addEventListener('online', renderHeader);
     window.addEventListener('offline', renderHeader);
-    
+
     // Identify hardware THEN start sync
     identifyDevice().then(() => {
         auth.onAuthStateChanged(user => {
             if (user && currentLocalMac) {
                 document.getElementById('login-ui')?.remove();
-                
+
                 // Narrowed listener: Only listen to THIS device
                 db.ref(`${user.uid}/${currentLocalMac}`).on('value', snap => {
                     if (isUpdating) return;
