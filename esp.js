@@ -248,6 +248,7 @@ async function refreshStats() {
     try {
         const res = await fetch('/api/status');
         const data = await res.json();
+        console.log(data);
         lastStats = data;
         if (data.mac) localStorage.setItem('hommily_cache_mac', data.mac);
     } catch (e) {
